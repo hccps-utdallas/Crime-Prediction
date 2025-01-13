@@ -14,7 +14,7 @@ CPI_DATA = {}
 
 LOCAL_EVENT_DATA_PATH = ""
 
-SAVED_GRID_PATH = "../src/preload_grid"
+SAVED_GRID_PATH = "../../data/preload_grid"
 
 DPD_API_URL = "www.dallasopendata.com"
 DPD_DATASET_ID = "qv6i-rri7"
