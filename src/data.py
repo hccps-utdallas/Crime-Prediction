@@ -8,7 +8,6 @@ import meteostat
 from sodapy import Socrata
 
 import config
-from utils import find_nearest_station
 
 
 # import dotenv
@@ -33,14 +32,8 @@ class FeatureEngineering:
         self.df['week_of_year_sin'] = np.sin(2 * np.pi * self.df['week_of_year'] / 52)
         self.df['week_of_year_cos'] = np.cos(2 * np.pi * self.df['week_of_year'] / 52)
 
-    def preprocessing(self):
-        self.data = self.data.dropna()
-        # self.data  = self.data[feature list]
-        pass
-    
     def get_dataframe(self):
         return self.df[[self.features_list]]
-
 
 
 class PrepareTrainingData:
@@ -201,7 +194,6 @@ class PrepareTrainingData:
         
         fe = FeatureEngineering(self.full_grid, config.FEATURES_LIST)
         fe.get_time_features()
-        fe.preprocessing()
         self.full_grid_engineered = fe.get_dataframe()
     
     def split_data(self, train_ratio=0.8, valid_ratio=0.1, test_ratio=0.1):

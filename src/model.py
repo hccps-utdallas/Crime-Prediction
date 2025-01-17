@@ -1,42 +1,45 @@
-from data import PrepareTrainingData
 import xgboost as xgb
-# from config import PATH
+from config import FEATURES_LIST, TARGET
 
 class TrainXGBModel:
+
+    def __init__(self, params, train_input, test_input, validation_input = None, is_realtime = True, model_file = None):
+        self.is_realtime = is_realtime
+        if is_realtime:
+            self.train_input, self.predict_input = train_input, test_input
+            self.model_file = model_file
+            self.params_update = params
+        else:
+            self.params = params
+            self.train_input, self.test_input, self.validation_input = train_input, test_input, validation_input
+
+    def train_xgb_model(self):
         
-        def __init__(self, update):
-            self.update = update
-            self.train_input, self.label, self.predict_input = PrepareTrainingData()
+        if self.is_realtime:
+            dtrain_new = xgb.DMatrix(self.train_input[FEATURES_LIST], label=self.train_input[TARGET])
+            self.model = xgb.train(
+                self.params_update,
+                dtrain_new,
+                num_boost_round=50, #Number of new trees to add
+                xgb_model = self.load_model() #Pass the initial model to continue training
+            )
+        else:
+            dtrain_initial = xgb.DMatrix(self.train_input[FEATURES_LIST], label=self.train_input[TARGET])
+            self.model = xgb.train(self.params, dtrain_initial, num_boost_round=self.params['n_estimators'])
+            #  self.model = XGBoost(self.train_input, self.label, self.model)
 
-        def train_xgb_model(self):
-            # if self.update:
-            #     self.model_updated = xgb.train(
-            #         params_update,
-            #         dtrain_new,
-            #         num_boost_round=50, #Number of new trees to add
-            #         xgb_model=model #Pass the initial model to continue training
-            #     )
-            # else:
-            #     self.model = xgb.train(params, dtrain_initial, num_boost_round=params['n_estimators'])
-            #     #  self.model = XGBoost(self.train_input, self.label, self.model)
-            pass
+    def save_model(self):
+        self.model.save_model(CONFIG.PATH['SAVE_MODEL_PATH'])
 
-        def save_model(self):
-            if self.update:
-                # self.model_updated.save_model(PATH['SAVE_MODEL_PATH'])
-                pass
-            else:
-                # self.model.save_model(PATH['SAVE_MODEL_PATH'])
-                pass
-    
-        def load_model(self):
-            if self.update:
-                # self.model = load_model(PATH['LOAD_MODEL_PATH'])
-                pass
-    
-        def predict(self):
-            predictions = self.model_updated.predict(self.predict_input)
-            pass
-    
-        def evaluate(self):
-            pass
+    def load_model(self):
+        if self.is_realtime:
+            model = xgb.Booster().load_model(self.model_file)
+            
+            return model
+
+    def predict(self, model):
+        predictions = model.predict(self.test_input)
+        return predictions
+
+    # def evaluate(self):
+    #     pass
