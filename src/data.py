@@ -1,28 +1,28 @@
 import os
 import pandas as pd
 import numpy as np
-from datetime import datetime
+import datetime
 
 import json
 import meteostat
 from sodapy import Socrata
 
 import config
-
+from utils import clean_up_loc, load_local_csv
 
 # import dotenv
 
 # dotenv(../../../.env)
 class FeatureEngineering:
-    def __init__(self, df, features_list):
+    def __init__(self, df):
         self.df = df
-        self.features_list = features_list
     
     def get_time_features(self):
         # Extract year, day of year, week of year, and month-day components
-        self.df['date_year'] = self.df['date'].dt.year
-        self.df['day_of_year'] = self.df['date'].dt.dayofyear
-        self.df['week_of_year'] = self.df['date'].dt.isocalendar().week
+        self.df['date_year'] = self.df['date'].apply(lambda x: x.timetuple().tm_year)
+        # self.df['day_of_year'] = self.df['date'].dt.dayofyear
+        self.df['day_of_year'] = self.df['date'].apply(lambda x: x.timetuple().tm_yday)
+        self.df['week_of_year'] = pd.to_datetime(self.df['date']).dt.isocalendar().week
 
         # Encode day_of_year cyclically
         self.df['day_of_year_sin'] = np.sin(2 * np.pi * self.df['day_of_year'] / 365)
@@ -33,7 +33,7 @@ class FeatureEngineering:
         self.df['week_of_year_cos'] = np.cos(2 * np.pi * self.df['week_of_year'] / 52)
 
     def get_dataframe(self):
-        return self.df[[self.features_list]]
+        return self.df[config.FEATURES_LIST+config.TARGET]
 
 
 class PrepareTrainingData:
@@ -55,10 +55,10 @@ class PrepareTrainingData:
 
         if is_realtime:
             self.fixed_date = pd.to_datetime(datetime.datetime.today()).date()
+            self.data = self.load_event_data()
         else:
             self.fixed_date = None
-        
-        self.data = self.load_event_data(filepath_or_dataframe)
+            self.data = self.load_event_data(filepath_or_dataframe)
         
         # Load fixed grid coordinates
         self.grids_df = pd.read_json(f"{config.SAVED_GRID_PATH}/{city.lower()}_{str(grid_size).replace('.', '')}.json", 
@@ -67,11 +67,11 @@ class PrepareTrainingData:
         self.weather_df = pd.DataFrame()
         self.df_macro = pd.DataFrame()
 
-    def load_event_data(self, data_source):
+    def load_event_data(self, data_source = None):
         """Fetch event data from a CSV file or an API endpoint."""
         
         if self.is_realtime:
-            return self.fetch_data_from_api()
+            return self.fetch_event_data_from_api()
         
         else:
             if isinstance(data_source, str):
@@ -101,22 +101,34 @@ class PrepareTrainingData:
 
     def assign_events_to_grid(self):
         # Assign each event to the nearest grid center
+        if self.is_realtime:
+            self.data['longitude'] = self.data['geocoded_column'].apply(lambda x: float(x['longitude']) if isinstance(x, dict) and 'longitude' in x else None)
+            self.data['latitude'] = self.data['geocoded_column'].apply(lambda x: float(x['latitude']) if isinstance(x, dict) and 'latitude' in x else None)
+        else:
+            self.data[['longitude', 'latitude']] = self.data['Location1'].apply(lambda x: pd.Series(clean_up_loc(x)))
+
         self.data['lon_bin'] = ((self.data['longitude'] // self.grid_size) * self.grid_size + self.grid_size / 2).round(3)
         self.data['lat_bin'] = ((self.data['latitude'] // self.grid_size) * self.grid_size + self.grid_size / 2).round(3)
         
         # Merge events with grid centers to ensure all grid centers are included
-        self.binned_event_data = self.grid_df.merge(self.data, how='left', on=['lon_bin', 'lat_bin'])
-        self.binned_event_data.groupby(['date1', 'lon_bin', 'lat_bin'])['Incident Number w/year'].nunique().reset_index(name='unique_event_count')
-        self.binned_event_data['unique_event_count'].fillna(0, inplace=True)
+        if 'Incident Number w/year' in self.data.columns:
+            self.grouped_data = self.data.groupby(['date1', 'lon_bin', 'lat_bin'])['Incident Number w/year'].nunique().reset_index(name='unique_event_count')
+        else:
+            self.grouped_data = self.data.groupby(['date1', 'lon_bin', 'lat_bin'])['incidentnum'].nunique().reset_index(name='unique_event_count')
+        
+        self.grids_df = self.grids_df.merge(pd.DataFrame(self.grouped_data['date1'].unique(), columns=['date1']), how = 'cross')
+        # self.binned_event_data = self.grids_df.merge(grouped_data, how = 'left', on=['date1', 'lon_bin', 'lat_bin'])
+        # self.binned_event_data['unique_event_count'].fillna(0, inplace=True)
 
-        return self.binned_event_data
+        return self.grouped_data
     
     def fetch_load_weather_data(self, start_date, end_date=None, timezone='US/Central', max_retries=5):
         
         if end_date is None:
             end_date = start_date
-        start_time = datetime.strptime(start_date, '%Y-%m-%d')
-        end_time = datetime.strptime(end_date, '%Y-%m-%d')
+        start_time = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+        end_time = datetime.datetime.combine(end_date, datetime.datetime.min.time())
+        # datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
         weather_data = []
         
@@ -126,31 +138,33 @@ class PrepareTrainingData:
             radius_km = 50  # Find weather station within 50 km
             max_stations = 10
             stations = meteostat.Stations().nearby(latitude, longitude).fetch(max_stations)
-            print(f"Found {len(stations)} nearby weather stations within {radius_km} km")
 
+            data_found = False
+            # print(f"Found {len(stations)} nearby weather stations within {radius_km} km")
             # traverse each weather station
             for station_id in stations.index:
                 for attempt in range(max_retries + 1):
                     # print the current station
                     try:
-                        print(
-                            f"Attempt {attempt + 1}: Requesting data from station {station_id}")
+                        # print(f"Attempt {attempt + 1}: Requesting data from station {station_id}")
                         
                         data_daily = meteostat.Daily(station_id, start_time, end_time)
                         data = data_daily.fetch()
 
                         # return if fetch data successfully
                         if not data.empty:
-                            print(f"Data found from station {station_id}!")
-                            data['longitude'] = longitude
-                            data['latitude'] = latitude
-                            weather_data.append(data)
+                            # print(f"Data found from station {station_id}!")
+                            data['lon_bin'] = longitude
+                            data['lat_bin'] = latitude
+                            weather_data.append(data.reset_index(drop = False))
+                            data_found = True
                             break
                     except Exception as e:
                         print(f"Error fetching data: {e}")
                         if attempt == max_retries:
                             print("Max retries reached, moving to next station.")
-
+                if data_found:
+                    break
                 # data['longitude'] = longitude
                 # data['latitude'] = latitude
                 # weather_data.append(data)
@@ -159,40 +173,43 @@ class PrepareTrainingData:
             self.weather_df = pd.concat(weather_data, ignore_index=True)
         else:
             self.weather_df = pd.DataFrame()
+        
+        ## clean up format
+        self.weather_df.rename(columns={'time': 'date'}, inplace=True)
+        self.weather_df['date'] = pd.to_datetime(self.weather_df['date']).dt.date
 
         return self.weather_df
 
     @staticmethod
-    def load_macro_data(self):
+    def load_macro_data():
         df_unemp = pd.DataFrame(config.UNEMPLOYMENT_DATA)
         df_cpi = pd.DataFrame(config.CPI_DATA)
-        self.df_macro = pd.merge(df_unemp, df_cpi, on='Year', how='inner')
+        df_macro = pd.merge(df_unemp, df_cpi, on=['Year','Statistical_Area'], how='inner')
 
-        return self.df_macro
-    
+        return df_macro
     
     def integrate_data(self):
         """ Integrate macroeconomic and weather data into the main dataset. """
         if self.is_realtime:
             dates = pd.DataFrame({'date': [self.fixed_date]})
         else:
-            dates = pd.DataFrame({'date': pd.date_range(self.data['date'].min(), self.data['date'].max()).date})
+            dates = pd.DataFrame({'date': pd.date_range(self.data['date1'].min(), self.data['date1'].max()).date})
         
         self.full_grid = pd.merge(dates, self.grids_df, how='cross')
+        self.df_macro = self.load_macro_data()
+        self.fetch_load_weather_data(self.full_grid['date'].min(), self.full_grid['date'].max())
 
-        self.load_macro_data()
-        self.fetch_load_weather_data(self.data['date'].min(), self.data['date'].max())
-        
         # Add year column for merging with macro data
-        self.full_grid['Year'] = pd.to_datetime(self.data['date']).dt.year
+        self.full_grid['Year'] = self.full_grid['date'].apply(lambda x: x.year)
         self.full_grid = self.full_grid.merge(self.df_macro, on='Year', how='left')
         self.full_grid = self.full_grid.merge(self.weather_df, on=['date', 'lon_bin', 'lat_bin'], how='left')
-        self.full_grid.merge(self.binned_event_data, on=['date', 'lon_bin', 'lat_bin'], how='left')
+        self.full_grid =  self.full_grid.merge(self.grouped_data, on=['date1', 'lon_bin', 'lat_bin'], how='left')
+        self.full_grid['unique_event_count'].fillna(0, inplace=True)
         
     def apply_feature_engineering(self):
         """Apply feature engineering to the data."""
         
-        fe = FeatureEngineering(self.full_grid, config.FEATURES_LIST)
+        fe = FeatureEngineering(self.full_grid)
         fe.get_time_features()
         self.full_grid_engineered = fe.get_dataframe()
     
@@ -212,17 +229,25 @@ class PrepareTrainingData:
             self.train_data = self.full_grid_engineered.iloc[:train_end]
             self.valid_data = self.full_grid_engineered.iloc[train_end:valid_end]
             self.test_data = self.full_grid_engineered.iloc[valid_end:]
+        # else:
+        #     raise ValueError("Only offline data needs to be split.")
         else:
             # All data before the current date is used for training, current date for testing
-            self.full_grid_engineered = self.full_grid_engineered.sort_values('date')
+            # self.full_grid_engineered = self.full_grid_engineered.sort_values('date')
             
-            self.train_data = self.full_grid_engineered[self.full_grid_engineered['date'] < self.fixed_date]
-            self.test_data = self.full_grid_engineered[self.full_grid_engineered['date'] == self.fixed_date]
+            self.train_data = load_local_csv(config.PREV_DATA_PATH)[config.FEATURES_LIST].merge(
+                self.full_grid_engineered[['lon_bin', 'lat_bin', 'unique_event_count']], on = ['lon_bin', 'lat_bin'], how = 'left')
+            self.test_data = self.full_grid_engineered[config.FEATURES_LIST]
 
-    def save_data(self, train_path, valid_path=None, test_path=None):
+    def save_data(self):
+        
         """Save the split data sets to files."""
-        self.train_data.to_csv(train_path, index=False)
-        if valid_path and hasattr(self, 'valid_data'):
-            self.valid_data.to_csv(valid_path, index=False)
-        if test_path:
-            self.test_data.to_csv(test_path, index=False)
+        
+        if self.is_realtime:
+            self.test_data.to_csv(config.PREV_DATA_PATH, index=False)
+        
+        else:
+            self.train_data.to_csv(config.BATCH_TRAIN_FILE_PATH, index=False)
+            self.valid_data.to_csv(config.BATCH_VALID_FILE_PATH, index=False)
+            self.test_data.to_csv(config.BATCH_TEST_FILE_PATH, index=False)
+                
