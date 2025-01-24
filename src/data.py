@@ -6,6 +6,7 @@ import datetime
 import json
 import meteostat
 from sodapy import Socrata
+import pytz
 
 import config
 from utils import clean_up_loc, load_local_csv
@@ -82,31 +83,38 @@ class PrepareTrainingData:
                 raise ValueError("Data input must be a file path or a pandas DataFrame")
 
     def fetch_event_data_from_api(self):
-        try:
-            client = Socrata(config.DPD_API_URL, None)
-            print(f"Successfully connected to API at {config.DPD_API_URL}")
-            
-            # Test API connection
-            try:
-                # Try a minimal API call first
-                test_result = client.get(config.DPD_DATASET_ID, limit=1)
-                print("Test API call successful")
-            except Exception as e:
-                print(f"Test API call failed: {str(e)}")
-                # Fallback to local data if available
-                return self.load_fallback_data()
-
-            date_filter = f"""date1='{(self.fixed_date - datetime.timedelta(days=1)).strftime("%Y-%m-%d 00:00:00.0000000")}'"""
-            print(f"Fetching data with filter: {date_filter}")
-            
-            results = client.get(config.DPD_DATASET_ID, where=date_filter)
-            return pd.DataFrame.from_records(results)
-            
-        except Exception as e:
-            print(f"API access failed: {str(e)}")
-            # Fallback to local data
-            return self.load_fallback_data()
+        client = Socrata(config.DPD_API_URL, None)
+        print(f"Successfully connected to API at {config.DPD_API_URL}")
         
+        # Convert fixed_date to Central Time (Dallas timezone)
+        dallas_tz = pytz.timezone('America/Chicago')
+        utc_date = pd.Timestamp(self.fixed_date).tz_localize('UTC')
+        dallas_date = utc_date.tz_convert(dallas_tz)
+        
+        # Get previous day in Dallas time
+        dallas_prev_day = (dallas_date - datetime.timedelta(days=1))
+        date_filter = f"""date1='{dallas_prev_day.strftime("%Y-%m-%d 00:00:00.0000000")}'"""
+        
+        print(f"UTC time: {utc_date}")
+        print(f"Dallas time: {dallas_date}")
+        print(f"Fetching data with filter: {date_filter}")
+        
+        results = client.get(config.DPD_DATASET_ID, where=date_filter)
+        results_df = pd.DataFrame.from_records(results)
+        
+        print("Data columns:", results_df.columns.tolist())
+        print("Sample data:", results_df.head(1).to_dict())
+        
+        if results_df.empty:
+            print("Warning: No data found for the date")
+            return pd.DataFrame({
+                'geocoded_column': [],
+                'date1': [],
+                'incidentnum': [],
+                'Location1': []
+            })
+        
+        return results_df        
     
     def load_fallback_data(self):
         """Load fallback data for GitHub Actions environment"""
