@@ -82,22 +82,41 @@ class PrepareTrainingData:
                 raise ValueError("Data input must be a file path or a pandas DataFrame")
 
     def fetch_event_data_from_api(self):
-        """Fetch data from API for real-time processing."""
-        # Unauthenticated client only works with public data sets. Note 'None'
-        # in place of application token, and no username or password:
-        client = Socrata(config.DPD_API_URL, None)
+        try:
+            client = Socrata(config.DPD_API_URL, None)
+            print(f"Successfully connected to API at {config.DPD_API_URL}")
+            
+            # Test API connection
+            try:
+                # Try a minimal API call first
+                test_result = client.get(config.DPD_DATASET_ID, limit=1)
+                print("Test API call successful")
+            except Exception as e:
+                print(f"Test API call failed: {str(e)}")
+                # Fallback to local data if available
+                return self.load_fallback_data()
 
-        # Example authenticated client (needed for non-public datasets):
-        # client = Socrata(www.dallasopendata.com,
-        #                  MyAppToken,
-        #                  username="user@example.com",
-        #                  password="AFakePassword")
+            date_filter = f"""date1='{(self.fixed_date - datetime.timedelta(days=1)).strftime("%Y-%m-%d 00:00:00.0000000")}'"""
+            print(f"Fetching data with filter: {date_filter}")
+            
+            results = client.get(config.DPD_DATASET_ID, where=date_filter)
+            return pd.DataFrame.from_records(results)
+            
+        except Exception as e:
+            print(f"API access failed: {str(e)}")
+            # Fallback to local data
+            return self.load_fallback_data()
         
-        results = client.get(config.DPD_DATASET_ID, 
-                             where=f"""date1='{(self.fixed_date - datetime.timedelta(days=1)).strftime("%Y-%m-%d 00:00:00.0000000")}'""")
-        results_df = pd.DataFrame.from_records(results)
-
-        return results_df
+    
+    def load_fallback_data(self):
+        """Load fallback data for GitHub Actions environment"""
+        try:
+            # Load local sample data included in your repository
+            fallback_path = os.path.join(config.FALLBACK_DATA_PATH, 'sample_crime_data.csv')
+            print(f"Loading fallback data from: {fallback_path}")
+            return pd.read_csv(fallback_path)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load fallback data: {str(e)}")
 
     def assign_events_to_grid(self):
         # Assign each event to the nearest grid center
