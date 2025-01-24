@@ -68,36 +68,25 @@ class PrepareTrainingData:
         self.df_macro = pd.DataFrame()
 
     def load_event_data(self, data_source = None):
-        """Fetch event data from a CSV file or an API endpoint."""
-        
+        print(f"Loading data with source: {data_source}")
         if self.is_realtime:
-            return self.fetch_event_data_from_api()
-        
+            data = self.fetch_event_data_from_api()
         else:
             if isinstance(data_source, str):
-                return pd.read_csv(data_source)
+                data = pd.read_csv(data_source)
             elif isinstance(data_source, pd.DataFrame):
-                return data_source
-            else:
-                raise ValueError("Data input must be a file path or a pandas DataFrame")
+                data = data_source
+        
+        print("Loaded data columns:", data.columns)
+        print("First row sample:", data.iloc[0])
+        return data
 
     def fetch_event_data_from_api(self):
-        """Fetch data from API for real-time processing."""
-        # Unauthenticated client only works with public data sets. Note 'None'
-        # in place of application token, and no username or password:
         client = Socrata(config.DPD_API_URL, None)
-
-        # Example authenticated client (needed for non-public datasets):
-        # client = Socrata(www.dallasopendata.com,
-        #                  MyAppToken,
-        #                  username="user@example.com",
-        #                  password="AFakePassword")
-        
         results = client.get(config.DPD_DATASET_ID, 
-                             where=f"""date1='{(self.fixed_date - datetime.timedelta(days=1)).strftime("%Y-%m-%d 00:00:00.0000000")}'""")
-        results_df = pd.DataFrame.from_records(results)
-
-        return results_df
+                            where=f"""date1='{(self.fixed_date - datetime.timedelta(days=1)).strftime("%Y-%m-%d 00:00:00.0000000")}'""")
+        print("API response sample:", results[0] if results else "No data")
+        return pd.DataFrame.from_records(results)
 
     def assign_events_to_grid(self):
         # Assign each event to the nearest grid center
