@@ -1,6 +1,7 @@
 ## import packages
 from datetime import datetime
 import pandas as pd
+import config
 
 
 def clean_up_loc(loc_string):
@@ -18,8 +19,8 @@ def load_local_csv(path):
 
 def save_three_values(df1, df2, df3, path):
     
-    visualization_df = pd.concat([df1,df2,df3], axis = 1)
-    visualization_df.columns = [['yesterday_pred', 'yesterday_true', 'today_pred']]
-
+    visualization_df = df1.merge(df2, on=[config.LOC]).merge(df3, on = [config.LOC])
+    visualization_df.columns = [['lon_bin', 'lat_bin', 'yesterday_pred', 'yesterday_true', 'today_pred']]
+    visualization_df['yesterday_diff'] = visualization_df['yesterday_true'] - visualization_df['yesterday_pred']
     visualization_df.to_csv(path, index = False)
 

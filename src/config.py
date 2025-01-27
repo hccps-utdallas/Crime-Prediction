@@ -43,6 +43,7 @@ FEATURES_LIST = ['lon_bin', 'lat_bin', 'date_year', 'day_of_year_sin', 'day_of_y
 # ['lon_bin', 'lat_bin', 'date_year', 'day_of_year_sin', 'day_of_year_cos', 'week_of_year_sin', 'week_of_year_cos',
 #             'tavg', 'tmin', 'tmax', 'prcp', 'snow', 'Unemployment_Rate(%)', 'Unemployment_Rank', 'CPI(Annual)', 'Nearest Station', 'Distance (km)']
 TARGET = ['unique_event_count']
+LOC = ['lon_bin', 'lat_bin']
 
 # # Define model parameters
 # params = {

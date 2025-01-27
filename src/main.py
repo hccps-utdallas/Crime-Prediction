@@ -40,16 +40,16 @@ if __name__ == "__main__":
         
         ## Yesterday's prediction and ground truth
         df1 = pd.read_csv(config.PREDICTION_DATA_PATH)
-        df2 = data_preparer.train_data[config.TARGET]
+        df2 = data_preparer.train_data[config.LOC+config.TARGET]
 
         ## Initialize and train the model
         model_trainer = TrainXGBModel(params_path = 'model/candidate-model-1/params.yaml', is_realtime = True, 
                                     model_file = config.SAVED_MODEL_FILE_PATH, train_input = data_preparer.train_data, test_input = data_preparer.test_data)
         model_trainer.train_xgb_model()
 
-
         predictions = model_trainer.predict(model_trainer.model)
-        df3 = pd.DataFrame(predictions)
+        df3 = pd.concat([data_preparer.test_data[config.LOC], pd.DataFrame(predictions)], axis = 1)
+        
         df3.to_csv(config.PREDICTION_DATA_PATH, index=False)
 
         ## Save the trained model
