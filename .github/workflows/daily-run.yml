@@ -1,7 +1,7 @@
 name: Daily Crime Prediction Run
 on:
   schedule:
-    - cron: '0 3 * * *'  # Runs at 3 AM UTC daily
+    - cron: '0 11 * * *'  # Runs at 11 AM UTC daily
   workflow_dispatch:      # Allows manual trigger
 
 jobs:
@@ -35,5 +35,6 @@ jobs:
           git add ./data/deployed_files/last_day_input_data.csv
           git add ./data/deployed_files/prediction_data.csv
           git add ./data/deployed_files/visualization_data.csv
+          git add ./model/xgb_model.xgb
           git commit -m "Update prediction data $(date +'%Y-%m-%d') [skip ci]"
           git push
