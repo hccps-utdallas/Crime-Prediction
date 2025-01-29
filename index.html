@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dallas Crime Heatmap Comparison</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    
+    <style>
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .maps-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .map-wrapper {
+            flex: 1 1 45%;
+            min-width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        .map {
+            height: 100%;
+        }
+        .legend {
+            padding: 6px 8px;
+            background: white;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            line-height: 24px;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        .grid-cell {
+            transition: all 0.3s ease;
+        }
+        .grid-cell:hover {
+            filter: brightness(0.8);
+        }
+        .map-label {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            z-index: 1000;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            font-weight: bold;
+        }
+        #map3-wrapper {
+            flex: 1 1 100%;
+            height: 400px;
+        }
+
+        .nav-links {
+            padding: 15px;
+            background: #f0f0f0;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .nav-links a {
+            color: #2563eb;
+            text-decoration: none;
+            padding: 5px 10px;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .nav-links a.active {
+            background: #2563eb;
+            color: white;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="index.html" class="active">Yesterday's Analysis</a>
+        <a href="today.html">Today's Predictions</a>
+    </div>
+
+    <div class="maps-container">
+        <div class="map-wrapper">
+            <div class="map-label">Yesterday's True Crime Data</div>
+            <div id="map1" class="map"></div>
+        </div>
+        <div class="map-wrapper">
+            <div class="map-label">Yesterday's Predicted Crime Data</div>
+            <div id="map2" class="map"></div>
+        </div>
+        <div class="map-wrapper" id="map3-wrapper">
+            <div class="map-label">Yesterday's Crime Data Difference (Predicted - True)</div>
+            <div id="map3" class="map"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    
+    <script>
+        // Initialize all three maps
+        const map1 = L.map('map1').setView([32.7767, -96.7970], 11);
+        const map2 = L.map('map2').setView([32.7767, -96.7970], 11);
+        const map3 = L.map('map3').setView([32.7767, -96.7970], 11);
+
+        // Synchronize all three maps
+        function syncMaps(sourceMap, targetMaps) {
+            sourceMap.on('move', function() {
+                targetMaps.forEach(targetMap => {
+                    targetMap.setView(sourceMap.getCenter(), sourceMap.getZoom(), {
+                        animate: false
+                    });
+                });
+            });
+        }
+
+        // Sync all maps
+        syncMaps(map1, [map2, map3]);
+        syncMaps(map2, [map1, map3]);
+        syncMaps(map3, [map1, map2]);
+
+        // Add tile layers to all maps
+        [map1, map2, map3].forEach(map => {
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        });
+
+        const CELL_SIZE_DEG = 0.05; // Grid cell size
+
+        function getHeatmapColor(count, isDifference = false) {
+            if (!isDifference) {
+                if (count === 0) return '#e5f5e0';
+                if (count >= 8) return '#ff0000';
+                if (count >= 4) return '#ff8800';
+                return '#ffff00';
+            } else {
+                // Color scheme for difference map
+                if (count > 2) return '#ff0000';      // Significantly over-predicted
+                if (count > 0) return '#ff8800';      // Over-predicted
+                if (count === 0) return '#e5f5e0';    // Perfect prediction
+                if (count >= -2) return '#0088ff';    // Under-predicted
+                return '#0000ff';                     // Significantly under-predicted
+            }
+        }
+
+        function addGridToMap(data, map, valueKey, isDifference = false) {
+            const gridLayer = L.featureGroup();
+            
+            data.forEach(cell => {
+                // Grid cell center coordinates
+                const lat = cell.lat_bin;
+                const lon = cell.lon_bin;
+                
+                const bounds = [
+                    [lat - CELL_SIZE_DEG/2, lon - CELL_SIZE_DEG/2],
+                    [lat + CELL_SIZE_DEG/2, lon + CELL_SIZE_DEG/2]
+                ];
+                
+                const value = isDifference ? 
+                    cell['yesterday_pred'] - cell['yesterday_true'] : 
+                    cell[valueKey];
+                
+                const rectangle = L.rectangle(bounds, {
+                    color: 'transparent',
+                    weight: 0,
+                    fillColor: getHeatmapColor(value, isDifference),
+                    fillOpacity: 0.6,
+                    className: 'grid-cell'
+                });
+
+                const popupContent = isDifference ? 
+                    `Difference: ${value.toFixed(1)}<br>Predicted: ${cell['yesterday_pred']}<br>True: ${cell['yesterday_true']}` :
+                    `Crimes: ${value}`;
+                
+                rectangle.bindPopup(popupContent);
+                gridLayer.addLayer(rectangle);
+            });
+            
+            gridLayer.addTo(map);
+            return gridLayer;
+        }
+
+        function addLegend(map, title, isDifference = false) {
+            const legend = L.control({position: 'bottomright'});
+            legend.onAdd = function (map) {
+                const div = L.DomUtil.create('div', 'legend');
+                if (!isDifference) {
+                    div.innerHTML = `<h4>${title}</h4>` +
+                        '<i style="background: #ff0000"></i> High (8+)<br>' +
+                        '<i style="background: #ff8800"></i> Medium (4-7)<br>' +
+                        '<i style="background: #ffff00"></i> Low (1-3)<br>' +
+                        '<i style="background: #e5f5e0"></i> No Crime Data<br>';
+                } else {
+                    div.innerHTML = `<h4>${title}</h4>` +
+                        '<i style="background: #ff0000"></i> Over by 2+<br>' +
+                        '<i style="background: #ff8800"></i> Over by 0-2<br>' +
+                        '<i style="background: #e5f5e0"></i> Perfect Match<br>' +
+                        '<i style="background: #0088ff"></i> Under by 0-2<br>' +
+                        '<i style="background: #0000ff"></i> Under by 2+<br>';
+                }
+                return div;
+            };
+            legend.addTo(map);
+        }
+
+        // Load and display data
+        fetch('./front_end/o1.json')
+            .then(response => response.json())
+            .then(data => {
+                // Add grids to maps using the new data format
+                addGridToMap(data, map1, 'yesterday_true');
+                addGridToMap(data, map2, 'yesterday_pred');
+                addGridToMap(data, map3, null, true); // For difference map
+
+                // Add legends
+                addLegend(map1, 'Yesterday True Crime');
+                addLegend(map2, 'Yesterday Predicted Crime');
+                addLegend(map3, 'Prediction Difference', true);
+
+                // Fit to Dallas area
+                map1.fitBounds([[32.6, -97.0], [33.0, -96.6]]);
+            })
+            .catch(error => {
+                console.error('Error loading data:', error);
+                alert('Error loading data. Check console for details.');
+            });
+    </script>
+</body>
+</html>

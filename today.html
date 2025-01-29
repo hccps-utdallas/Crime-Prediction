@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today's Crime Predictions</title>
+    
+    <!-- Navigation styles -->
+    <style>
+        .nav-links {
+            padding: 15px;
+            background: #f0f0f0;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .nav-links a {
+            color: #2563eb;
+            text-decoration: none;
+            padding: 5px 10px;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .nav-links a.active {
+            background: #2563eb;
+            color: white;
+            border-radius: 4px;
+        }
+    </style>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .map-wrapper {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            height: 600px;
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+        .map {
+            height: 100%;
+        }
+        .legend {
+            padding: 6px 8px;
+            background: white;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            line-height: 24px;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        .grid-cell {
+            transition: all 0.3s ease;
+        }
+        .grid-cell:hover {
+            filter: brightness(0.8);
+        }
+        .map-label {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            z-index: 1000;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="index.html">Yesterday's Analysis</a>
+        <a href="todays_predictions.html" class="active">Today's Predictions</a>
+    </div>
+
+    <div class="map-wrapper">
+        <div class="map-label">Today's Crime Prediction</div>
+        <div id="map" class="map"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    
+    <script>
+        // Dallas polygon coordinates
+        const DALLAS_POLYGON = [
+            [32.869839, -96.936899],
+            [32.977145, -96.837507],
+            [32.906461, -96.733480],
+            [32.910587, -96.642199],
+            [32.859866, -96.587225],
+            [32.712301, -96.610572],
+            [32.640769, -96.662670],
+            [32.640769, -96.836477],
+            [32.774660, -96.991724],
+            [32.869839, -96.936899]
+        ];
+
+        const CELL_SIZE_DEG = 0.05; // Matching the grid size from the other visualization
+
+        // Initialize map
+        const map = L.map('map').setView([32.7767, -96.7970], 11);
+
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        function getHeatmapColor(count) {
+            if (count === 0) return '#e5f5e0';
+            if (count >= 8) return '#ff0000';
+            if (count >= 4) return '#ff8800';
+            return '#ffff00';
+        }
+
+        function addGridToMap(data, map) {
+            const gridLayer = L.featureGroup();
+            
+            data.forEach(cell => {
+                // Grid cell center coordinates
+                const lat = cell.lat_bin;
+                const lon = cell.lon_bin;
+                
+                const bounds = [
+                    [lat - CELL_SIZE_DEG/2, lon - CELL_SIZE_DEG/2],
+                    [lat + CELL_SIZE_DEG/2, lon + CELL_SIZE_DEG/2]
+                ];
+                
+                const count = cell.today_pred;
+                
+                const rectangle = L.rectangle(bounds, {
+                    color: 'transparent',
+                    weight: 0,
+                    fillColor: getHeatmapColor(count),
+                    fillOpacity: count > 0 ? 0.6 : 0.3,
+                    className: 'grid-cell'
+                });
+
+                rectangle.bindPopup(`Predicted Crimes: ${count}`);
+                gridLayer.addLayer(rectangle);
+            });
+            
+            gridLayer.addTo(map);
+            return gridLayer;
+        }
+
+        function addLegend(map) {
+            const legend = L.control({position: 'bottomright'});
+            legend.onAdd = function (map) {
+                const div = L.DomUtil.create('div', 'legend');
+                div.innerHTML = '<h4>Predicted Crime Density</h4>' +
+                    '<i style="background: #ff0000"></i> High (8+)<br>' +
+                    '<i style="background: #ff8800"></i> Medium (4-7)<br>' +
+                    '<i style="background: #ffff00"></i> Low (1-3)<br>' +
+                    '<i style="background: #e5f5e0"></i> No Crime Predicted<br>' +
+                    '<div style="margin-top: 10px;">' +
+                    '<i style="background: none; border: 2px dashed #2563eb"></i>Dallas City Boundary</div>';
+                return div;
+            };
+            legend.addTo(map);
+        }
+
+        function addDallasBoundary(map) {
+            return L.polygon(DALLAS_POLYGON, {
+                color: '#2563eb',
+                weight: 3,
+                fill: false,
+                dashArray: '5, 10'
+            }).addTo(map);
+        }
+
+        // Load and display data
+        fetch('./front_end/o1.json')
+            .then(response => response.json())
+            .then(data => {
+                // Add grid to map
+                const gridLayer = addGridToMap(data, map);
+
+                // Add Dallas boundary
+                const boundary = addDallasBoundary(map);
+                boundary.bringToFront();
+
+                // Add legend
+                addLegend(map);
+
+                // Fit to Dallas boundary
+                const polyBounds = L.latLngBounds(DALLAS_POLYGON);
+                map.fitBounds(polyBounds);
+            })
+            .catch(error => {
+                console.error('Error loading data:', error);
+                alert('Error loading data. Check console for details.');
+            });
+    </script>
+</body>
+</html>
