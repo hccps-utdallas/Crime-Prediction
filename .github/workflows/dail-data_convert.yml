@@ -1,0 +1,37 @@
+name: Daily JSON Update
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs at 12 AM UTC daily
+  workflow_dispatch:      # Allows manual trigger
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write    # Grant write permission to repository contents
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run CSV to JSON conversion
+        run: python ./front_end/c2j.py
+        
+      - name: Commit and push JSON file
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add ./front_end/o1.json
+          git commit -m "Update JSON $(date +'%Y-%m-%d') [skip ci]"
+          git push
