@@ -32,6 +32,9 @@ class FeatureEngineering:
         # Encode week_of_year cyclically
         self.df['week_of_year_sin'] = np.sin(2 * np.pi * self.df['week_of_year'] / 52)
         self.df['week_of_year_cos'] = np.cos(2 * np.pi * self.df['week_of_year'] / 52)
+    
+    def clean_data_types(self, column_name):
+        self.df[column_name] = self.df[column_name].astype('category')
 
     def get_dataframe(self):
         return self.df[config.FEATURES_LIST+config.TARGET]
@@ -217,7 +220,7 @@ class PrepareTrainingData:
     def load_macro_data():
         df_unemp = pd.DataFrame(config.UNEMPLOYMENT_DATA)
         df_cpi = pd.DataFrame(config.CPI_DATA)
-        df_macro = pd.merge(df_unemp, df_cpi, on=['Year','Statistical_Area'], how='inner')
+        df_macro = pd.merge(df_unemp, df_cpi, on=['Year','Statistical_Area'], how='left')
 
         return df_macro
     
@@ -244,6 +247,7 @@ class PrepareTrainingData:
         
         fe = FeatureEngineering(self.full_grid)
         fe.get_time_features()
+        fe.clean_data_types('Nearest Station')
         self.full_grid_engineered = fe.get_dataframe()
     
     def split_data(self, train_ratio=0.8, valid_ratio=0.1, test_ratio=0.1):
@@ -270,6 +274,7 @@ class PrepareTrainingData:
             
             self.train_data = load_local_csv(config.PREV_DATA_PATH)[config.FEATURES_LIST].merge(
                 self.full_grid_engineered[['lon_bin', 'lat_bin', 'unique_event_count']], on = ['lon_bin', 'lat_bin'], how = 'left')
+            self.train_data['Nearest Station'] = self.train_data['Nearest Station'].astype('category')
             self.test_data = self.full_grid_engineered[config.FEATURES_LIST]
 
     def save_data(self):

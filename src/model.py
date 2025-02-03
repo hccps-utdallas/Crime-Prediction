@@ -52,7 +52,7 @@ class TrainXGBModel:
             return model
 
     def predict(self, model):
-        pred_input = xgb.DMatrix(self.test_input[FEATURES_LIST])
+        pred_input = xgb.DMatrix(self.test_input[FEATURES_LIST], enable_categorical = True)
         predictions = model.predict(pred_input)
         y_pred_exp = np.exp(predictions)  # Back-transform predictions
         y_pred_rounded = np.clip(np.round(y_pred_exp).astype(int), 0, None) 
