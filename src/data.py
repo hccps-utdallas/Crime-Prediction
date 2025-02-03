@@ -274,6 +274,7 @@ class PrepareTrainingData:
             
             self.train_data = load_local_csv(config.PREV_DATA_PATH)[config.FEATURES_LIST].merge(
                 self.full_grid_engineered[['lon_bin', 'lat_bin', 'unique_event_count']], on = ['lon_bin', 'lat_bin'], how = 'left')
+            self.train_data['Nearest Station'] = self.train_data['Nearest Station'].astype('category')
             self.test_data = self.full_grid_engineered[config.FEATURES_LIST]
 
     def save_data(self):
