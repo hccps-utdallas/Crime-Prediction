@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 
 import meteostat
+from dateutil.relativedelta import relativedelta
 from sodapy import Socrata
 from openai import OpenAI
 
@@ -151,8 +152,7 @@ def generate_prediction(target_date, lon_bin, lat_bin, output_df, event_df, api_
     event_details = json.dumps(event_df[
         (event_df.lon_bin == lon_bin) & (event_df.lat_bin == lat_bin) & 
         (event_df.date1 >= date_range[0]) & (event_df.date1 <= date_range[1])
-    ][['Offense Status', 'Modus Operandi (MO)', 'Family Offense', 'Hate Crime', 
-       'Hate Crime Description', 'Weapon Used', 'Gang Related Offense',
+    ][['Offense Status', 'Modus Operandi (MO)', 'Family Offense', 'Hate Crime Description', 'Weapon Used', 'Gang Related Offense',
        'Drug Related Istevencident', 'NIBRS Crime Category', 'NIBRS Crime Against']].to_dict(orient='records'))
 
     # Filter and prepare test info
@@ -161,19 +161,18 @@ def generate_prediction(target_date, lon_bin, lat_bin, output_df, event_df, api_
         (output_df.lon_bin == lon_bin) & (output_df.lat_bin == lat_bin)
     ].set_index('date1')[
         ['day_of_year_sin', 'day_of_year_cos', 'week_of_year_sin', 'week_of_year_cos', 
-         'tavg', 'tmin', 'tmax', 'prcp', 'snow', 'Unemployment_Rate(%)', 'CPI', 'Distance (km)']
+         'Avg Temp', 'Min Temp', 'Max Temp', 'Precipitation', 'Snowfall', 'Unemployment_Rate(%)', 'CPI', 'Distance (km)']
     ].to_dict(orient='index')
 
-    for date in test_info:
-        date_obj = pd.to_datetime(date)
-        test_info[date]["last month date"] = output_df[
-            (output_df.date1 == (date_obj - pd.DateOffset(months=1)).strftime('%Y-%m-%d')) & 
-            (output_df.lon_bin == lon_bin) & (output_df.lat_bin == lat_bin)
-        ]["unique_event_count"].values[0]
-        test_info[date]["last year date"] = output_df[
-            (output_df.date1 == (date_obj - pd.DateOffset(years=1)).strftime('%Y-%m-%d')) & 
-            (output_df.lon_bin == lon_bin) & (output_df.lat_bin == lat_bin)
-        ]["unique_event_count"].values[0]
+
+    test_info["last month same date"] = output_df[
+        (output_df.date1 == (target_date_obj - pd.DateOffset(months=1)).strftime('%Y-%m-%d')) & 
+        (output_df.lon_bin == lon_bin) & (output_df.lat_bin == lat_bin)
+    ]["unique_event_count"].values[0]
+    test_info["last year same date"] = output_df[
+        (output_df.date1 == (target_date_obj - pd.DateOffset(years=1)).strftime('%Y-%m-%d')) & 
+        (output_df.lon_bin == lon_bin) & (output_df.lat_bin == lat_bin)
+    ]["unique_event_count"].values[0]
 
     test_info_json = json.dumps(test_info)
 
@@ -225,9 +224,8 @@ if __name__ == "__main__":
     
     ## Global variables
     dt = datetime.date.today()
-    detail_list = ['date1','lon_bin', 'lat_bin', 'Offense Status', 'Modus Operandi (MO)', 'Family Offense', 'Hate Crime', 
-       'Hate Crime Description', 'Weapon Used', 'Gang Related Offense',
-       'Drug Related Istevencident', 'NIBRS Crime Category', 'NIBRS Crime Against']
+    detail_list = ['date1','lon_bin', 'lat_bin', 'Offense Status', 'Modus Operandi (MO)', 'Family Offense', 'Hate Crime Description', 
+                   'Weapon Used', 'Gang Related Offense', 'Drug Related Istevencident', 'NIBRS Crime Category', 'NIBRS Crime Against']
     
     ## Check key availability
     if not api_key:
@@ -253,11 +251,11 @@ if __name__ == "__main__":
     
     
     #### fetch past 1 year data
-    one_year_ago = dt - datetime.timedelta(year=1)
+    one_year_ago = dt - relativedelta(years=1)
     event_df = pd.concat([event_df, fetch_event_data_from_api(date=one_year_ago.strftime('%Y-%m-%d'))], axis=0)
     ## Fetch past 1 month data
-    one_month_ago = dt - datetime.timedelta(month=1)
-    event_df = pd.concat([event_df, fetch_event_data_from_api(date=one_year_ago.strftime('%Y-%m-%d'))], axis=0)
+    one_month_ago = dt - relativedelta(months=1)
+    event_df = pd.concat([event_df, fetch_event_data_from_api(date=one_month_ago.strftime('%Y-%m-%d'))], axis=0)
     
     #### Clean up
     event_df.reset_index(drop=True, inplace=True)
@@ -280,24 +278,19 @@ if __name__ == "__main__":
     fe = FeatureEngineering(pre_fe_df1)
     fe.get_time_features()
     output_df = fe.get_dataframe() ## training_df
-    # print(agg_event_data_df.shape)
-    # agg_event_data_df.head(2)
-
-    # with open('output_df.pkl', 'rb') as f:
-    #     training_df = pickle.load(f)
-    # with open('event_concated_df.pkl', 'rb') as f:
-    #     event_concated_df = pickle.load(f)
+    
+    ## Clean up
+    output_df = pd.concat([pre_fe_df1[['date1']], output_df], axis=1)
+    output_df.rename(columns={'tavg': 'Avg Temp', 'tmin': 'Min Temp', 'tmax': 'Max Temp', 'prcp': 'Precipitation','snow': 'Snowfall', 'wdir': 'Wind Direction', 'wspd': 'Wind Speed', 'wpgt': 'Wind Gust', 'pres': 'Atmospheric Pressure', 'tsun': 'Total Sunshine Duration'}, inplace=True)
+    event_df.rename(columns={'status': 'Offense Status', 'mo':'Modus Operandi (MO)', 'family':'Family Offense','hatecrimedescriptn': 'Hate Crime Description', 'weaponused': 'Weapon Used', 'gang': 'Gang Related Offense', 'drug': 'Drug Related Istevencident', 'nibrs_crime_category': 'NIBRS Crime Category', 'nibrs_crimeagainst': 'NIBRS Crime Against'}, inplace=True)
     
     ## Obtain the predcition
     predictions = []
     for _, row in grids_df.iterrows():
-        try:
-            one_step_prediction = generate_prediction(dt.strftime('%Y-%m-%d'), row.lon_bin, row.lat_bin, output_df = output_df, 
-                                                      event_df = event_df[detail_list], model = model_name)
-            predictions.append(one_step_prediction)
-        except:
-            print(row.lon_bin, row.lat_bin, dt.strftime('%Y-%m-%d'))
-            continue
+        one_step_prediction = generate_prediction(dt.strftime('%Y-%m-%d'), row.lon_bin, row.lat_bin, output_df = output_df, 
+                                                    event_df = event_df[detail_list], api_key = api_key, model_name = model_name)
+        predictions.append(one_step_prediction)
+    
     if _ % 5 == 0:
         print(_)
     
@@ -307,6 +300,6 @@ if __name__ == "__main__":
     ## Initialize and train the model
     df3 = pd.concat([grids_df[config.LOC], pd.DataFrame(predictions, columns=['pred'])], axis = 1)
     df3.to_csv(config.PREDICTION_DATA_PATH, index=False)
-    df2 = agg_event_data_df[agg_event_data_df.date1 == (dt - datetime.timedelta(days=1)).strftime('%Y-%m-%d')]['lat_bin', 'log_bin', 'unique_event_count']
+    df2 = agg_event_data_df[agg_event_data_df.date1 == (dt - datetime.timedelta(days=1)).strftime('%Y-%m-%d')][['lat_bin', 'log_bin', 'unique_event_count']]
     utils.save_three_values(df1, df2, df3, config.VISUALIZATION_DATA_PATH)
     # print(f"{model}, RMSE: {np.mean(np.sqrt(np.mean(np.array(list(res.values())) ** 2, axis=0)))}")
