@@ -271,7 +271,7 @@ if __name__ == "__main__":
 
     pre_fe_df1 = agg_event_data_df.merge(weather_df[['lon_bin', 'lat_bin', 'date1', 'tavg',
        'tmin', 'tmax', 'prcp', 'snow', 'wdir', 'wspd', 'wpgt', 'pres', 'tsun']], left_on=['date1', 'lon_bin', 'lat_bin'], right_on=['date1', 'lon_bin', 'lat_bin'], how='left')
-
+    
     pre_fe_df1['Year-Month'] = pre_fe_df1.date1.apply(lambda x: '-'.join(x.split('-')[:2]))
     pre_fe_df1 = pre_fe_df1.merge(macro_df, on=['Year-Month'], how='left')
     pre_fe_df1['date'] = pd.to_datetime(pre_fe_df1['date1']).dt.date
@@ -283,6 +283,7 @@ if __name__ == "__main__":
     output_df = pd.concat([pre_fe_df1[['date1']], output_df], axis=1)
     output_df.rename(columns={'tavg': 'Avg Temp', 'tmin': 'Min Temp', 'tmax': 'Max Temp', 'prcp': 'Precipitation','snow': 'Snowfall', 'wdir': 'Wind Direction', 'wspd': 'Wind Speed', 'wpgt': 'Wind Gust', 'pres': 'Atmospheric Pressure', 'tsun': 'Total Sunshine Duration'}, inplace=True)
     event_df.rename(columns={'status': 'Offense Status', 'mo':'Modus Operandi (MO)', 'family':'Family Offense','hatecrimedescriptn': 'Hate Crime Description', 'weaponused': 'Weapon Used', 'gang': 'Gang Related Offense', 'drug': 'Drug Related Istevencident', 'nibrs_crime_category': 'NIBRS Crime Category', 'nibrs_crimeagainst': 'NIBRS Crime Against'}, inplace=True)
+
     
     ## Obtain the predcition
     predictions = []
@@ -296,10 +297,9 @@ if __name__ == "__main__":
     
     ## Save the results
     df1 = pd.read_csv(config.PREDICTION_DATA_PATH)
-    
-    ## Initialize and train the model
+    df2 = output_df[output_df.date1 == (dt - datetime.timedelta(days=1)).strftime('%Y-%m-%d')][['lon_bin', 'lat_bin', 'unique_event_count']]
     df3 = pd.concat([grids_df[config.LOC], pd.DataFrame(predictions, columns=['pred'])], axis = 1)
     df3.to_csv(config.PREDICTION_DATA_PATH, index=False)
-    df2 = agg_event_data_df[agg_event_data_df.date1 == (dt - datetime.timedelta(days=1)).strftime('%Y-%m-%d')][['lat_bin', 'log_bin', 'unique_event_count']]
+    print(df1.shape, df2.shape, df2.shape)
     utils.save_three_values(df1, df2, df3, config.VISUALIZATION_DATA_PATH)
     # print(f"{model}, RMSE: {np.mean(np.sqrt(np.mean(np.array(list(res.values())) ** 2, axis=0)))}")
