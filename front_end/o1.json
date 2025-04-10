@@ -13059,25 +13059,25 @@
         "lon_bin": -96.975,
         "lat_bin": 32.625,
         "yesterday_pred": 0,
-        "yesterday_true": 0.0,
+        "yesterday_true": 1.0,
         "today_pred": 0,
-        "yesterday_diff": 0.0
+        "yesterday_diff": 1.0
     },
     {
         "lon_bin": -96.975,
         "lat_bin": 32.675,
-        "yesterday_pred": 1,
+        "yesterday_pred": 0,
         "yesterday_true": 0.0,
         "today_pred": 0,
-        "yesterday_diff": -1.0
+        "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.975,
         "lat_bin": 32.725,
-        "yesterday_pred": 0,
+        "yesterday_pred": 1,
         "yesterday_true": 0.0,
-        "today_pred": 1,
-        "yesterday_diff": 0.0
+        "today_pred": 0,
+        "yesterday_diff": -1.0
     },
     {
         "lon_bin": -96.975,
@@ -13708,24 +13708,24 @@
         "lat_bin": 32.675,
         "yesterday_pred": 0,
         "yesterday_true": 0.0,
-        "today_pred": 0,
+        "today_pred": 1,
         "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.925,
         "lat_bin": 32.725,
-        "yesterday_pred": 1,
-        "yesterday_true": 3.0,
-        "today_pred": 3,
-        "yesterday_diff": 2.0
+        "yesterday_pred": 3,
+        "yesterday_true": 0.0,
+        "today_pred": 0,
+        "yesterday_diff": -3.0
     },
     {
         "lon_bin": -96.925,
         "lat_bin": 32.775,
-        "yesterday_pred": 0,
-        "yesterday_true": 2.0,
-        "today_pred": 1,
-        "yesterday_diff": 2.0
+        "yesterday_pred": 1,
+        "yesterday_true": 0.0,
+        "today_pred": 0,
+        "yesterday_diff": -1.0
     },
     {
         "lon_bin": -96.925,
@@ -13740,7 +13740,7 @@
         "lat_bin": 32.875,
         "yesterday_pred": 1,
         "yesterday_true": 1.0,
-        "today_pred": 1,
+        "today_pred": 0,
         "yesterday_diff": 0.0
     },
     {
@@ -14339,57 +14339,57 @@
         "lon_bin": -96.875,
         "lat_bin": 32.625,
         "yesterday_pred": 0,
-        "yesterday_true": 0.0,
-        "today_pred": 0,
-        "yesterday_diff": 0.0
+        "yesterday_true": 1.0,
+        "today_pred": 1,
+        "yesterday_diff": 1.0
     },
     {
         "lon_bin": -96.875,
         "lat_bin": 32.675,
-        "yesterday_pred": 1,
-        "yesterday_true": 4.0,
-        "today_pred": 3,
-        "yesterday_diff": 3.0
+        "yesterday_pred": 3,
+        "yesterday_true": 5.0,
+        "today_pred": 5,
+        "yesterday_diff": 2.0
     },
     {
         "lon_bin": -96.875,
         "lat_bin": 32.725,
-        "yesterday_pred": 3,
-        "yesterday_true": 7.0,
-        "today_pred": 7,
-        "yesterday_diff": 4.0
+        "yesterday_pred": 7,
+        "yesterday_true": 4.0,
+        "today_pred": 4,
+        "yesterday_diff": -3.0
     },
     {
         "lon_bin": -96.875,
         "lat_bin": 32.775,
-        "yesterday_pred": 1,
-        "yesterday_true": 4.0,
-        "today_pred": 4,
-        "yesterday_diff": 3.0
+        "yesterday_pred": 4,
+        "yesterday_true": 5.0,
+        "today_pred": 3,
+        "yesterday_diff": 1.0
     },
     {
         "lon_bin": -96.875,
         "lat_bin": 32.825,
-        "yesterday_pred": 8,
-        "yesterday_true": 6.0,
-        "today_pred": 6,
+        "yesterday_pred": 6,
+        "yesterday_true": 4.0,
+        "today_pred": 3,
         "yesterday_diff": -2.0
     },
     {
         "lon_bin": -96.875,
         "lat_bin": 32.875,
-        "yesterday_pred": 12,
-        "yesterday_true": 10.0,
-        "today_pred": 10,
-        "yesterday_diff": -2.0
+        "yesterday_pred": 10,
+        "yesterday_true": 9.0,
+        "today_pred": 4,
+        "yesterday_diff": -1.0
     },
     {
         "lon_bin": -96.875,
         "lat_bin": 32.925,
-        "yesterday_pred": 0,
-        "yesterday_true": 3.0,
-        "today_pred": 1,
-        "yesterday_diff": 3.0
+        "yesterday_pred": 1,
+        "yesterday_true": 1.0,
+        "today_pred": 0,
+        "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.875,
@@ -14403,9 +14403,9 @@
         "lon_bin": -96.875,
         "lat_bin": 33.025,
         "yesterday_pred": 0,
-        "yesterday_true": 0.0,
+        "yesterday_true": 1.0,
         "today_pred": 0,
-        "yesterday_diff": 0.0
+        "yesterday_diff": 1.0
     },
     {
         "lon_bin": -96.875,
@@ -14978,62 +14978,14 @@
     {
         "lon_bin": -96.825,
         "lat_bin": 32.625,
-        "yesterday_pred": 1,
-        "yesterday_true": 0.0,
-        "today_pred": 0,
-        "yesterday_diff": -1.0
+        "yesterday_pred": 0,
+        "yesterday_true": 1.0,
+        "today_pred": 1,
+        "yesterday_diff": 1.0
     },
     {
         "lon_bin": -96.825,
         "lat_bin": 32.675,
-        "yesterday_pred": 6,
-        "yesterday_true": 6.0,
-        "today_pred": 5,
-        "yesterday_diff": 0.0
-    },
-    {
-        "lon_bin": -96.825,
-        "lat_bin": 32.725,
-        "yesterday_pred": 5,
-        "yesterday_true": 11.0,
-        "today_pred": 10,
-        "yesterday_diff": 6.0
-    },
-    {
-        "lon_bin": -96.825,
-        "lat_bin": 32.775,
-        "yesterday_pred": 25,
-        "yesterday_true": 12.0,
-        "today_pred": 12,
-        "yesterday_diff": -13.0
-    },
-    {
-        "lon_bin": -96.825,
-        "lat_bin": 32.825,
-        "yesterday_pred": 15,
-        "yesterday_true": 7.0,
-        "today_pred": 7,
-        "yesterday_diff": -8.0
-    },
-    {
-        "lon_bin": -96.825,
-        "lat_bin": 32.875,
-        "yesterday_pred": 0,
-        "yesterday_true": 2.0,
-        "today_pred": 2,
-        "yesterday_diff": 2.0
-    },
-    {
-        "lon_bin": -96.825,
-        "lat_bin": 32.925,
-        "yesterday_pred": 2,
-        "yesterday_true": 0.0,
-        "today_pred": 0,
-        "yesterday_diff": -2.0
-    },
-    {
-        "lon_bin": -96.825,
-        "lat_bin": 32.975,
         "yesterday_pred": 5,
         "yesterday_true": 1.0,
         "today_pred": 1,
@@ -15041,11 +14993,59 @@
     },
     {
         "lon_bin": -96.825,
-        "lat_bin": 33.025,
+        "lat_bin": 32.725,
+        "yesterday_pred": 10,
+        "yesterday_true": 6.0,
+        "today_pred": 6,
+        "yesterday_diff": -4.0
+    },
+    {
+        "lon_bin": -96.825,
+        "lat_bin": 32.775,
+        "yesterday_pred": 12,
+        "yesterday_true": 6.0,
+        "today_pred": 5,
+        "yesterday_diff": -6.0
+    },
+    {
+        "lon_bin": -96.825,
+        "lat_bin": 32.825,
+        "yesterday_pred": 7,
+        "yesterday_true": 4.0,
+        "today_pred": 2,
+        "yesterday_diff": -3.0
+    },
+    {
+        "lon_bin": -96.825,
+        "lat_bin": 32.875,
         "yesterday_pred": 2,
         "yesterday_true": 1.0,
-        "today_pred": 0,
+        "today_pred": 1,
         "yesterday_diff": -1.0
+    },
+    {
+        "lon_bin": -96.825,
+        "lat_bin": 32.925,
+        "yesterday_pred": 0,
+        "yesterday_true": 4.0,
+        "today_pred": 1,
+        "yesterday_diff": 4.0
+    },
+    {
+        "lon_bin": -96.825,
+        "lat_bin": 32.975,
+        "yesterday_pred": 1,
+        "yesterday_true": 1.0,
+        "today_pred": 1,
+        "yesterday_diff": 0.0
+    },
+    {
+        "lon_bin": -96.825,
+        "lat_bin": 33.025,
+        "yesterday_pred": 0,
+        "yesterday_true": 0.0,
+        "today_pred": 0,
+        "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.825,
@@ -15618,73 +15618,73 @@
     {
         "lon_bin": -96.775,
         "lat_bin": 32.625,
-        "yesterday_pred": 1,
-        "yesterday_true": 2.0,
-        "today_pred": 2,
-        "yesterday_diff": 1.0
+        "yesterday_pred": 2,
+        "yesterday_true": 0.0,
+        "today_pred": 6,
+        "yesterday_diff": -2.0
     },
     {
         "lon_bin": -96.775,
         "lat_bin": 32.675,
-        "yesterday_pred": 5,
-        "yesterday_true": 4.0,
-        "today_pred": 3,
-        "yesterday_diff": -1.0
+        "yesterday_pred": 3,
+        "yesterday_true": 8.0,
+        "today_pred": 8,
+        "yesterday_diff": 5.0
     },
     {
         "lon_bin": -96.775,
         "lat_bin": 32.725,
-        "yesterday_pred": 4,
-        "yesterday_true": 5.0,
-        "today_pred": 5,
-        "yesterday_diff": 1.0
+        "yesterday_pred": 5,
+        "yesterday_true": 3.0,
+        "today_pred": 3,
+        "yesterday_diff": -2.0
     },
     {
         "lon_bin": -96.775,
         "lat_bin": 32.775,
-        "yesterday_pred": 38,
-        "yesterday_true": 25.0,
-        "today_pred": 25,
-        "yesterday_diff": -13.0
+        "yesterday_pred": 25,
+        "yesterday_true": 22.0,
+        "today_pred": 20,
+        "yesterday_diff": -3.0
     },
     {
         "lon_bin": -96.775,
         "lat_bin": 32.825,
-        "yesterday_pred": 7,
-        "yesterday_true": 8.0,
+        "yesterday_pred": 8,
+        "yesterday_true": 9.0,
         "today_pred": 8,
         "yesterday_diff": 1.0
     },
     {
         "lon_bin": -96.775,
         "lat_bin": 32.875,
-        "yesterday_pred": 1,
-        "yesterday_true": 10.0,
-        "today_pred": 10,
-        "yesterday_diff": 9.0
+        "yesterday_pred": 10,
+        "yesterday_true": 8.0,
+        "today_pred": 4,
+        "yesterday_diff": -2.0
     },
     {
         "lon_bin": -96.775,
         "lat_bin": 32.925,
-        "yesterday_pred": 3,
-        "yesterday_true": 5.0,
+        "yesterday_pred": 1,
+        "yesterday_true": 4.0,
         "today_pred": 1,
-        "yesterday_diff": 2.0
+        "yesterday_diff": 3.0
     },
     {
         "lon_bin": -96.775,
         "lat_bin": 32.975,
-        "yesterday_pred": 1,
-        "yesterday_true": 0.0,
-        "today_pred": 0,
-        "yesterday_diff": -1.0
+        "yesterday_pred": 0,
+        "yesterday_true": 4.0,
+        "today_pred": 3,
+        "yesterday_diff": 4.0
     },
     {
         "lon_bin": -96.775,
         "lat_bin": 33.025,
         "yesterday_pred": 0,
         "yesterday_true": 0.0,
-        "today_pred": 0,
+        "today_pred": 3,
         "yesterday_diff": 0.0
     },
     {
@@ -16268,48 +16268,48 @@
         "lat_bin": 32.675,
         "yesterday_pred": 0,
         "yesterday_true": 0.0,
-        "today_pred": 0,
-        "yesterday_diff": 0.0
-    },
-    {
-        "lon_bin": -96.725,
-        "lat_bin": 32.725,
-        "yesterday_pred": 2,
-        "yesterday_true": 1.0,
-        "today_pred": 1,
-        "yesterday_diff": -1.0
-    },
-    {
-        "lon_bin": -96.725,
-        "lat_bin": 32.775,
-        "yesterday_pred": 8,
-        "yesterday_true": 3.0,
-        "today_pred": 3,
-        "yesterday_diff": -5.0
-    },
-    {
-        "lon_bin": -96.725,
-        "lat_bin": 32.825,
-        "yesterday_pred": 2,
-        "yesterday_true": 2.0,
         "today_pred": 2,
         "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.725,
-        "lat_bin": 32.875,
-        "yesterday_pred": 6,
-        "yesterday_true": 3.0,
+        "lat_bin": 32.725,
+        "yesterday_pred": 1,
+        "yesterday_true": 2.0,
+        "today_pred": 2,
+        "yesterday_diff": 1.0
+    },
+    {
+        "lon_bin": -96.725,
+        "lat_bin": 32.775,
+        "yesterday_pred": 3,
+        "yesterday_true": 6.0,
         "today_pred": 3,
-        "yesterday_diff": -3.0
+        "yesterday_diff": 3.0
+    },
+    {
+        "lon_bin": -96.725,
+        "lat_bin": 32.825,
+        "yesterday_pred": 2,
+        "yesterday_true": 0.0,
+        "today_pred": 1,
+        "yesterday_diff": -2.0
+    },
+    {
+        "lon_bin": -96.725,
+        "lat_bin": 32.875,
+        "yesterday_pred": 3,
+        "yesterday_true": 3.0,
+        "today_pred": 2,
+        "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.725,
         "lat_bin": 32.925,
-        "yesterday_pred": 5,
-        "yesterday_true": 8.0,
-        "today_pred": 7,
-        "yesterday_diff": 3.0
+        "yesterday_pred": 7,
+        "yesterday_true": 3.0,
+        "today_pred": 1,
+        "yesterday_diff": -4.0
     },
     {
         "lon_bin": -96.725,
@@ -16908,40 +16908,40 @@
         "lat_bin": 32.675,
         "yesterday_pred": 1,
         "yesterday_true": 1.0,
-        "today_pred": 1,
+        "today_pred": 3,
         "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.675,
         "lat_bin": 32.725,
-        "yesterday_pred": 3,
-        "yesterday_true": 7.0,
+        "yesterday_pred": 2,
+        "yesterday_true": 5.0,
+        "today_pred": 3,
+        "yesterday_diff": 3.0
+    },
+    {
+        "lon_bin": -96.675,
+        "lat_bin": 32.775,
+        "yesterday_pred": 1,
+        "yesterday_true": 5.0,
         "today_pred": 2,
         "yesterday_diff": 4.0
     },
     {
         "lon_bin": -96.675,
-        "lat_bin": 32.775,
-        "yesterday_pred": 5,
-        "yesterday_true": 3.0,
-        "today_pred": 1,
-        "yesterday_diff": -2.0
-    },
-    {
-        "lon_bin": -96.675,
         "lat_bin": 32.825,
-        "yesterday_pred": 3,
+        "yesterday_pred": 1,
         "yesterday_true": 2.0,
         "today_pred": 1,
-        "yesterday_diff": -1.0
+        "yesterday_diff": 1.0
     },
     {
         "lon_bin": -96.675,
         "lat_bin": 32.875,
-        "yesterday_pred": 2,
-        "yesterday_true": 0.0,
-        "today_pred": 0,
-        "yesterday_diff": -2.0
+        "yesterday_pred": 0,
+        "yesterday_true": 4.0,
+        "today_pred": 2,
+        "yesterday_diff": 4.0
     },
     {
         "lon_bin": -96.675,
@@ -17546,42 +17546,42 @@
     {
         "lon_bin": -96.625,
         "lat_bin": 32.675,
-        "yesterday_pred": 1,
-        "yesterday_true": 1.0,
-        "today_pred": 0,
-        "yesterday_diff": 0.0
+        "yesterday_pred": 0,
+        "yesterday_true": 2.0,
+        "today_pred": 1,
+        "yesterday_diff": 2.0
     },
     {
         "lon_bin": -96.625,
         "lat_bin": 32.725,
-        "yesterday_pred": 1,
-        "yesterday_true": 1.0,
+        "yesterday_pred": 0,
+        "yesterday_true": 0.0,
         "today_pred": 0,
         "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.625,
         "lat_bin": 32.775,
-        "yesterday_pred": 1,
+        "yesterday_pred": 0,
         "yesterday_true": 0.0,
         "today_pred": 0,
-        "yesterday_diff": -1.0
+        "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.625,
         "lat_bin": 32.825,
         "yesterday_pred": 0,
-        "yesterday_true": 1.0,
+        "yesterday_true": 0.0,
         "today_pred": 0,
-        "yesterday_diff": 1.0
+        "yesterday_diff": 0.0
     },
     {
         "lon_bin": -96.625,
         "lat_bin": 32.875,
         "yesterday_pred": 0,
-        "yesterday_true": 0.0,
+        "yesterday_true": 1.0,
         "today_pred": 0,
-        "yesterday_diff": 0.0
+        "yesterday_diff": 1.0
     },
     {
         "lon_bin": -96.625,
