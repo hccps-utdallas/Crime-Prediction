@@ -192,7 +192,7 @@ def generate_prediction(target_date, lon_bin, lat_bin, output_df, event_df, api_
                         (output_df.lon_bin == lon_bin) & (output_df.lat_bin == lat_bin)
                     ]["unique_event_count"].values),
                     event_input_json=event_details,
-                    factors_input_json=test_info_json
+                    factors_input_json=test_info_json,
                 )
             }
         ]
@@ -224,6 +224,8 @@ if __name__ == "__main__":
     
     ## Global variables
     dt = datetime.date.today()
+    print(f"Current date: {dt}")
+
     detail_list = ['date1','lon_bin', 'lat_bin', 'Offense Status', 'Modus Operandi (MO)', 'Family Offense', 'Hate Crime Description', 
                    'Weapon Used', 'Gang Related Offense', 'Drug Related Istevencident', 'NIBRS Crime Category', 'NIBRS Crime Against']
     
@@ -244,7 +246,7 @@ if __name__ == "__main__":
     ## Get event data from API
     #### fetch past 7 days data
     event_df = pd.DataFrame()
-    date_range = pd.date_range(start = (dt - datetime.timedelta(days=7)).strftime('%Y-%m-%d'), end = dt.strftime('%Y-%m-%d'))
+    date_range = pd.date_range(start = (dt - datetime.timedelta(days=7)).strftime('%Y-%m-%d'), end = (dt - datetime.timedelta(days=1)).strftime('%Y-%m-%d'))
     for date in date_range:
         event_df = pd.concat([event_df, fetch_event_data_from_api(date=date.strftime('%Y-%m-%d'))], axis=0)
         time.sleep(3)
@@ -292,13 +294,13 @@ if __name__ == "__main__":
                                                     event_df = event_df[detail_list], api_key = api_key, model_name = model_name)
         predictions.append(one_step_prediction)
     
-    if _ % 5 == 0:
-        print(_)
+        if _ % 10 == 0:
+            print(_)
     
     ## Save the results
-    df1 = pd.read_csv(config.PREDICTION_DATA_PATH)
-    df2 = output_df[output_df.date1 == (dt - datetime.timedelta(days=1)).strftime('%Y-%m-%d')][['lon_bin', 'lat_bin', 'unique_event_count']]
-    df3 = pd.concat([grids_df[config.LOC], pd.DataFrame(predictions, columns=['pred'])], axis = 1)
+    df1 = pd.read_csv(config.PREDICTION_DATA_PATH) ## yesterday's prediction
+    df2 = output_df[output_df.date1 == (dt - datetime.timedelta(days=1)).strftime('%Y-%m-%d')][['lon_bin', 'lat_bin', 'unique_event_count']] ## yesterday's ground truth
+    df3 = pd.concat([grids_df[config.LOC], pd.DataFrame(predictions, columns=['pred'])], axis = 1) ## today's prediction
     df3.to_csv(config.PREDICTION_DATA_PATH, index=False)
     print(df1.shape, df2.shape, df2.shape)
     utils.save_three_values(df1, df2, df3, config.VISUALIZATION_DATA_PATH)
