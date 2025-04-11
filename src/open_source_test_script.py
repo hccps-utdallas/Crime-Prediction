@@ -299,9 +299,9 @@ if __name__ == "__main__":
     
     ## Save the results
     df1 = pd.read_csv(config.PREDICTION_DATA_PATH) ## yesterday's prediction
-    df2 = output_df[output_df.date1 == (dt - datetime.timedelta(days=1)).strftime('%Y-%m-%d')][['lon_bin', 'lat_bin', 'unique_event_count']] ## yesterday's ground truth
-    df3 = pd.concat([grids_df[config.LOC], pd.DataFrame(predictions, columns=['pred'])], axis = 1) ## today's prediction
+    df2 = output_df[output_df.date1 == (dt - datetime.timedelta(days=1)).strftime('%Y-%m-%d')][['lon_bin', 'lat_bin', 'date1', 'unique_event_count']] ## yesterday's ground truth
+    df3 = pd.concat([grids_df[config.LOC], pd.DataFrame([dt.strftime('%Y-%m-%d')]*grids_df.shape[0], columns = ['today_date']), pd.DataFrame(predictions, columns=['pred'])], axis = 1) ## today's prediction
     df3.to_csv(config.PREDICTION_DATA_PATH, index=False)
-    print(df1.shape, df2.shape, df2.shape)
+    print(df1.shape, df2.shape, df3.shape)
     utils.save_three_values(df1, df2, df3, config.VISUALIZATION_DATA_PATH)
     # print(f"{model}, RMSE: {np.mean(np.sqrt(np.mean(np.array(list(res.values())) ** 2, axis=0)))}")
