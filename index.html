@@ -126,6 +126,11 @@
     
     <script>
         // Date formatting functions
+        function formatDateFromISO(isoDate) {
+            const date = new Date(isoDate);
+            return date;
+        }
+        
         function formatDateMMDDYYYY(date) {
             const mm = String(date.getMonth() + 1).padStart(2, '0');
             const dd = String(date.getDate()).padStart(2, '0');
@@ -145,32 +150,7 @@
             return date.toLocaleDateString('en-US', options);
         }
 
-        // Calculate yesterday and today dates
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        // Format dates in different formats
-        const yesterdayMMDDYYYY = formatDateMMDDYYYY(yesterday);
-        const todayMMDDYYYY = formatDateMMDDYYYY(today);
-        const yesterdaySlash = formatDateSlash(yesterday);
-        const yesterdayLong = formatDateLong(yesterday);
-
-        // Update navigation links
-        document.getElementById('nav-links').innerHTML = `
-            <a href="index.html" class="active">Yesterday's Analysis (${yesterdayMMDDYYYY})</a>
-            <a href="today.html">Today's Predictions (${todayMMDDYYYY})</a>
-        `;
-
-        // Update date indicator
-        document.getElementById('date-indicator').textContent = `Displaying data for: ${yesterdayLong}`;
-
-        // Update map labels
-        document.getElementById('map1-label').textContent = `True Crime Data (${yesterdaySlash})`;
-        document.getElementById('map2-label').textContent = `Predicted Crime Data (${yesterdaySlash})`;
-        document.getElementById('map3-label').textContent = `Crime Data Difference (${yesterdaySlash}): Predicted - True`;
-
-        // Initialize all three maps
+        // Initialize maps
         const map1 = L.map('map1').setView([32.7767, -96.7970], 11);
         const map2 = L.map('map2').setView([32.7767, -96.7970], 11);
         const map3 = L.map('map3').setView([32.7767, -96.7970], 11);
@@ -280,15 +260,40 @@
         fetch('./front_end/o1.json')
             .then(response => response.json())
             .then(data => {
-                // Add grids to maps using the new data format
+                // Get dates from the first data point (all should have the same dates)
+                if (data.length > 0) {
+                    const yesterdayDate = formatDateFromISO(data[0].yesterday_date);
+                    const todayDate = formatDateFromISO(data[0].today_date);
+                    
+                    const yesterdayMMDDYYYY = formatDateMMDDYYYY(yesterdayDate);
+                    const todayMMDDYYYY = formatDateMMDDYYYY(todayDate);
+                    const yesterdaySlash = formatDateSlash(yesterdayDate);
+                    const yesterdayLong = formatDateLong(yesterdayDate);
+                    
+                    // Update navigation links
+                    document.getElementById('nav-links').innerHTML = `
+                        <a href="index.html" class="active">Yesterday's Analysis (${yesterdayMMDDYYYY})</a>
+                        <a href="today.html">Today's Predictions (${todayMMDDYYYY})</a>
+                    `;
+                    
+                    // Update date indicator
+                    document.getElementById('date-indicator').textContent = `Displaying data for: ${yesterdayLong}`;
+                    
+                    // Update map labels
+                    document.getElementById('map1-label').textContent = `True Crime Data (${yesterdaySlash})`;
+                    document.getElementById('map2-label').textContent = `Predicted Crime Data (${yesterdaySlash})`;
+                    document.getElementById('map3-label').textContent = `Crime Data Difference (${yesterdaySlash}): Predicted - True`;
+                    
+                    // Add legends
+                    addLegend(map1, `True Crime (${yesterdaySlash})`);
+                    addLegend(map2, `Predicted Crime (${yesterdaySlash})`);
+                    addLegend(map3, `Prediction Difference (${yesterdaySlash})`, true);
+                }
+                
+                // Add grids to maps
                 addGridToMap(data, map1, 'yesterday_true');
                 addGridToMap(data, map2, 'yesterday_pred');
                 addGridToMap(data, map3, null, true); // For difference map
-
-                // Add legends
-                addLegend(map1, `True Crime (${yesterdaySlash})`);
-                addLegend(map2, `Predicted Crime (${yesterdaySlash})`);
-                addLegend(map3, `Prediction Difference (${yesterdaySlash})`, true);
 
                 // Fit to Dallas area
                 map1.fitBounds([[32.6, -97.0], [33.0, -96.6]]);

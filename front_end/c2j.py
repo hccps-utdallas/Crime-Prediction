@@ -16,8 +16,10 @@ def csv_to_json(csv_file_path, json_file_path):
             processed_row = {
                 'lon_bin': float(row['lon_bin']),
                 'lat_bin': float(row['lat_bin']),
+                'yesterday_date': row['yesterday_date'],  # Keep date as string
                 'yesterday_pred': int(row['yesterday_pred']),
                 'yesterday_true': float(row['yesterday_true']),
+                'today_date': row['today_date'],  # Keep date as string
                 'today_pred': int(row['today_pred']),
                 'yesterday_diff': float(row['yesterday_diff'])
             }
