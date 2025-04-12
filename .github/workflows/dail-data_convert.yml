@@ -1,7 +1,7 @@
 name: Daily JSON Update
 on:
   schedule:
-    - cron: '0 0 * * *'  # Runs at 12 AM UTC daily
+    - cron: '0 14 * * *'  # Runs at 1400 (2pm) UTC daily
   workflow_dispatch:      # Allows manual trigger
 
 jobs:
