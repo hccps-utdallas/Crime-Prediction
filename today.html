@@ -53,7 +53,8 @@
             transition: all 0.3s ease;
         }
         .grid-cell:hover {
-            filter: brightness(0.8);
+            filter: brightness(1.2);
+            z-index: 1000 !important;
         }
         .map-label {
             position: absolute;
@@ -104,9 +105,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
     
     <script>
-        // Date formatting functions
+        // Updated date formatting functions
         function formatDateFromISO(isoDate) {
-            const date = new Date(isoDate);
+            // Split the date string and convert to year, month, day values
+            const [year, month, day] = isoDate.split('-');
+            
+            // Create a date object with noon time to avoid any timezone issues
+            // Month is 0-indexed in JavaScript's Date, so we subtract 1
+            const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
             return date;
         }
         
@@ -153,11 +159,21 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        function getHeatmapColor(count) {
-            if (count === 0) return '#e5f5e0';
-            if (count >= 8) return '#ff0000';
-            if (count >= 4) return '#ff8800';
-            return '#ffff00';
+        // Updated color function to match the first page style
+        function getColorGradient(value, maxValue = 10) {
+            // Create a continuous color gradient from green to red
+            // Map value to a position in the color scale (0-100%)
+            const normalizedValue = Math.min(value, maxValue) / maxValue;
+            
+            // HSL color format for smooth transitions
+            // Green (120°) to Yellow (60°) to Orange (30°) to Red (0°)
+            const hue = Math.max(0, 120 - (normalizedValue * 120));
+            
+            // Adjust saturation and lightness
+            const saturation = 80;
+            const lightness = 60 - (normalizedValue * 20);  // Darker for larger values
+            
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
         }
 
         function addGridToMap(data, map) {
@@ -175,11 +191,12 @@
                 
                 const count = cell.today_pred;
                 
+                // Use the updated color gradient function
                 const rectangle = L.rectangle(bounds, {
-                    color: 'transparent',
-                    weight: 0,
-                    fillColor: getHeatmapColor(count),
-                    fillOpacity: count > 0 ? 0.6 : 0.3,
+                    color: 'rgba(0,0,0,0.2)',  // Light border for all cells
+                    weight: 1,
+                    fillColor: getColorGradient(count),
+                    fillOpacity: 0.7,
                     className: 'grid-cell'
                 });
 
@@ -191,17 +208,28 @@
             return gridLayer;
         }
 
-        function addLegend(map, todaySlash) {
+        // Updated legend to match the first page style
+        function addLegend(map, title) {
             const legend = L.control({position: 'bottomright'});
             legend.onAdd = function (map) {
                 const div = L.DomUtil.create('div', 'legend');
-                div.innerHTML = `<h4>Predicted Crime Density (${todaySlash})</h4>` +
-                    '<i style="background: #ff0000"></i> High (8+)<br>' +
-                    '<i style="background: #ff8800"></i> Medium (4-7)<br>' +
-                    '<i style="background: #ffff00"></i> Low (1-3)<br>' +
-                    '<i style="background: #e5f5e0"></i> No Crime Predicted<br>' +
-                    '<div style="margin-top: 10px;">' +
-                    '<i style="background: none; border: 2px dashed #2563eb"></i>Dallas City Boundary</div>';
+                
+                // Create a gradient legend
+                div.innerHTML = `
+                    <h4>${title}</h4>
+                    <div style="display: flex; margin-bottom: 10px;">
+                        <div style="flex-grow: 1; height: 20px; background: linear-gradient(to right, hsl(120, 80%, 60%), hsl(60, 80%, 60%), hsl(30, 80%, 50%), hsl(0, 80%, 40%));"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px;">
+                        <span>0</span>
+                        <span>3</span>
+                        <span>6</span>
+                        <span>10+</span>
+                    </div>
+                    <div style="margin-top: 10px;">
+                    <i style="background: none; border: 2px dashed #2563eb"></i>Dallas City Boundary</div>
+                `;
+                
                 return div;
             };
             legend.addTo(map);
@@ -236,7 +264,7 @@
                     // Update navigation links
                     document.getElementById('nav-links').innerHTML = `
                         <a href="index.html">Yesterday's Analysis (${yesterdayMMDDYYYY})</a>
-                        <a href="todays_predictions.html" class="active">Today's Predictions (${todayMMDDYYYY})</a>
+                        <a href="today.html" class="active">Today's Predictions (${todayMMDDYYYY})</a>
                     `;
                     
                     // Update date indicator
@@ -246,7 +274,7 @@
                     document.getElementById('map-label').textContent = `Crime Predictions (${todaySlash})`;
                     
                     // Add legend with correct date
-                    addLegend(map, todaySlash);
+                    addLegend(map, `Predicted Crime (${todaySlash})`);
                 }
                 
                 // Add grid to map
