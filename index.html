@@ -200,29 +200,36 @@
     
     <script>
         // Date formatting functions
-        function formatDateFromISO(isoDate) {
-            const date = new Date(isoDate);
-            return date;
-        }
+        // Updated date formatting function to preserve exact dates from the data
+    function formatDateFromISO(isoDate) {
+        // Split the date string and convert to year, month, day values
+        const [year, month, day] = isoDate.split('-');
         
-        function formatDateMMDDYYYY(date) {
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            const dd = String(date.getDate()).padStart(2, '0');
-            const yyyy = date.getFullYear();
-            return `${mm}-${dd}-${yyyy}`;
-        }
+        // Create a date object with noon time to avoid any timezone issues
+        // Month is 0-indexed in JavaScript's Date, so we subtract 1
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
+        return date;
+    }
 
-        function formatDateSlash(date) {
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            const dd = String(date.getDate()).padStart(2, '0');
-            const yyyy = date.getFullYear();
-            return `${mm}/${dd}/${yyyy}`;
-        }
+    // No changes needed to the other formatting functions
+    function formatDateMMDDYYYY(date) {
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${mm}-${dd}-${yyyy}`;
+    }
 
-        function formatDateLong(date) {
-            const options = { month: 'long', day: 'numeric', year: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
-        }
+    function formatDateSlash(date) {
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${mm}/${dd}/${yyyy}`;
+    }
+
+    function formatDateLong(date) {
+        const options = { month: 'long', day: 'numeric', year: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
+    }
 
         // Initialize maps
         const map1 = L.map('map1').setView([32.7767, -96.7970], 11);
