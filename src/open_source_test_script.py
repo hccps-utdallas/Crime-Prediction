@@ -237,7 +237,7 @@ if __name__ == "__main__":
     print("API key loaded successfully!")
 
     ## Load pre-defined grid
-    with open('./data/preload_grid/grids_df.pkl', 'rb') as f:
+    with open('./data/preload_grid/grids_df_001.pkl', 'rb') as f:
         grids_df = pickle.load(f)
     
     ## Load econ data
@@ -267,7 +267,7 @@ if __name__ == "__main__":
         grids_df, start_date=dt - datetime.timedelta(days=7), end_date=dt, timezone='US/Central', max_retries=5)
     
     event_df['date1'] = event_df['date1'].apply(lambda x: x.split(' ')[0])
-    agg_event_data_df = assign_events_to_grid2(event_df, grids_df, 0.05)
+    agg_event_data_df = assign_events_to_grid2(event_df, grids_df, 0.01)
 
     weather_df['date1'] = weather_df.date.astype(str)
 
