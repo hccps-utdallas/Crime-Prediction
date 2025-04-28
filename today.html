@@ -149,7 +149,7 @@
             [32.869839, -96.936899]
         ];
 
-        const CELL_SIZE_DEG = 0.05; // Matching the grid size from the other visualization
+        const CELL_SIZE_DEG = 0.01; // Matching the grid size from the other visualization
 
         // Initialize map
         const map = L.map('map').setView([32.7767, -96.7970], 11);
@@ -159,21 +159,20 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Updated color function to match the first page style
-        function getColorGradient(value, maxValue = 10) {
-            // Create a continuous color gradient from green to red
-            // Map value to a position in the color scale (0-100%)
-            const normalizedValue = Math.min(value, maxValue) / maxValue;
+        // Modified color function for 0, 1, 2, 3, 4+ scale
+        function getColorGradient(value) {
+            // Round the value to get a discrete color
+            const roundedValue = Math.min(4, Math.floor(value));
             
-            // HSL color format for smooth transitions
-            // Green (120°) to Yellow (60°) to Orange (30°) to Red (0°)
-            const hue = Math.max(0, 120 - (normalizedValue * 120));
-            
-            // Adjust saturation and lightness
-            const saturation = 80;
-            const lightness = 60 - (normalizedValue * 20);  // Darker for larger values
-            
-            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            // Define discrete colors for 0, 1, 2, 3, 4+
+            switch(roundedValue) {
+                case 0: return 'hsl(120, 80%, 60%)'; // Green
+                case 1: return 'hsl(90, 80%, 60%)';  // Light green
+                case 2: return 'hsl(60, 80%, 60%)';  // Yellow
+                case 3: return 'hsl(30, 80%, 55%)';  // Orange
+                case 4: return 'hsl(0, 80%, 50%)';   // Red
+                default: return 'hsl(0, 80%, 50%)';  // Red for 4+
+            }
         }
 
         function addGridToMap(data, map) {
@@ -191,7 +190,7 @@
                 
                 const count = cell.today_pred;
                 
-                // Use the updated color gradient function
+                // Use the modified discrete color function
                 const rectangle = L.rectangle(bounds, {
                     color: 'rgba(0,0,0,0.2)',  // Light border for all cells
                     weight: 1,
@@ -208,23 +207,28 @@
             return gridLayer;
         }
 
-        // Updated legend to match the first page style
+        // Updated legend to use discrete values
         function addLegend(map, title) {
             const legend = L.control({position: 'bottomright'});
             legend.onAdd = function (map) {
                 const div = L.DomUtil.create('div', 'legend');
                 
-                // Create a gradient legend
+                // Create a discrete legend with 5 boxes
                 div.innerHTML = `
                     <h4>${title}</h4>
-                    <div style="display: flex; margin-bottom: 10px;">
-                        <div style="flex-grow: 1; height: 20px; background: linear-gradient(to right, hsl(120, 80%, 60%), hsl(60, 80%, 60%), hsl(30, 80%, 50%), hsl(0, 80%, 40%));"></div>
+                    <div style="display: flex; margin-bottom: 5px;">
+                        <div style="flex-grow: 1; height: 20px; background: hsl(120, 80%, 60%);"></div>
+                        <div style="flex-grow: 1; height: 20px; background: hsl(90, 80%, 60%);"></div>
+                        <div style="flex-grow: 1; height: 20px; background: hsl(60, 80%, 60%);"></div>
+                        <div style="flex-grow: 1; height: 20px; background: hsl(30, 80%, 55%);"></div>
+                        <div style="flex-grow: 1; height: 20px; background: hsl(0, 80%, 50%);"></div>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px;">
                         <span>0</span>
+                        <span>1</span>
+                        <span>2</span>
                         <span>3</span>
-                        <span>6</span>
-                        <span>10+</span>
+                        <span>4+</span>
                     </div>
                     <div style="margin-top: 10px;">
                     <i style="background: none; border: 2px dashed #2563eb"></i>Dallas City Boundary</div>

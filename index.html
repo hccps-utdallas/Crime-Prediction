@@ -259,23 +259,22 @@
             }).addTo(map);
         });
 
-        const CELL_SIZE_DEG = 0.05; // Grid cell size
+        const CELL_SIZE_DEG = 0.01; // Grid cell size
 
-        // Unified color function for all maps
-        function getColorGradient(value, maxValue = 10) {
-            // Create a continuous color gradient from green to red
-            // Map value to a position in the color scale (0-100%)
-            const normalizedValue = Math.min(value, maxValue) / maxValue;
+        // Modified color function for 0, 1, 2, 3, 4+ scale
+        function getColorGradient(value) {
+            // Round the value to get a discrete color
+            const roundedValue = Math.min(4, Math.floor(value));
             
-            // HSL color format for smooth transitions
-            // Green (120°) to Yellow (60°) to Orange (30°) to Red (0°)
-            const hue = Math.max(0, 120 - (normalizedValue * 120));
-            
-            // Adjust saturation and lightness
-            const saturation = 80;
-            const lightness = 60 - (normalizedValue * 20);  // Darker for larger values
-            
-            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            // Define discrete colors for 0, 1, 2, 3, 4+
+            switch(roundedValue) {
+                case 0: return 'hsl(120, 80%, 60%)'; // Green
+                case 1: return 'hsl(90, 80%, 60%)';  // Light green
+                case 2: return 'hsl(60, 80%, 60%)';  // Yellow
+                case 3: return 'hsl(30, 80%, 55%)';  // Orange
+                case 4: return 'hsl(0, 80%, 50%)';   // Red
+                default: return 'hsl(0, 80%, 50%)';  // Red for 4+
+            }
         }
 
         // Function to add grid to map with unified style
@@ -301,7 +300,7 @@
                     value = cell[valueKey];
                 }
                 
-                // Get color using the unified color gradient function
+                // Get color using the modified color gradient function
                 const fillColor = getColorGradient(value);
                 
                 // Create the cell rectangle
@@ -334,23 +333,28 @@
             return gridLayer;
         }
 
-        // Updated legend function for unified style
+        // Updated legend function for 0, 1, 2, 3, 4+ discrete scale
         function addLegend(map, title) {
             const legend = L.control({position: 'bottomright'});
             legend.onAdd = function (map) {
                 const div = L.DomUtil.create('div', 'legend');
                 
-                // Create a gradient legend
+                // Create a discrete legend with 5 boxes
                 div.innerHTML = `
                     <h4>${title}</h4>
-                    <div style="display: flex; margin-bottom: 10px;">
-                        <div style="flex-grow: 1; height: 20px; background: linear-gradient(to right, hsl(120, 80%, 60%), hsl(60, 80%, 60%), hsl(30, 80%, 50%), hsl(0, 80%, 40%));"></div>
+                    <div style="display: flex; margin-bottom: 5px;">
+                        <div style="flex-grow: 1; height: 20px; background: hsl(120, 80%, 60%);"></div>
+                        <div style="flex-grow: 1; height: 20px; background: hsl(90, 80%, 60%);"></div>
+                        <div style="flex-grow: 1; height: 20px; background: hsl(60, 80%, 60%);"></div>
+                        <div style="flex-grow: 1; height: 20px; background: hsl(30, 80%, 55%);"></div>
+                        <div style="flex-grow: 1; height: 20px; background: hsl(0, 80%, 50%);"></div>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px;">
                         <span>0</span>
+                        <span>1</span>
+                        <span>2</span>
                         <span>3</span>
-                        <span>6</span>
-                        <span>10+</span>
+                        <span>4+</span>
                     </div>
                 `;
                 
@@ -453,7 +457,7 @@
                     document.getElementById('map2-label').textContent = `Predicted Crime Data (${yesterdaySlash})`;
                     document.getElementById('map3-label').textContent = `Absolute Difference (${yesterdaySlash})`;
                     
-                    // Add legends with consistent style
+                    // Add legends with modified discrete style
                     addLegend(map1, `True Crime (${yesterdaySlash})`);
                     addLegend(map2, `Predicted Crime (${yesterdaySlash})`);
                     addLegend(map3, `Absolute Difference (${yesterdaySlash})`);
