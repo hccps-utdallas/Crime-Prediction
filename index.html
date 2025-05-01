@@ -364,10 +364,12 @@
         }
 
         // Function to calculate metrics
+        // Function to calculate metrics - UPDATED VERSION
         function calculateMetrics(data) {
             let totalAbsoluteError = 0;
             let totalSquaredError = 0;
             let totalActual = 0;
+            let totalPredicted = 0; // New counter for total predictions
             let count = 0;
             
             data.forEach(cell => {
@@ -378,6 +380,7 @@
                 totalAbsoluteError += Math.abs(error);
                 totalSquaredError += error * error;
                 totalActual += actual;
+                totalPredicted += predicted; // Add the predicted count
                 count++;
             });
             
@@ -386,16 +389,18 @@
             const rmse = Math.sqrt(totalSquaredError / (count || 1)).toFixed(3);
             const totalErrors = totalAbsoluteError.toFixed(0);
             const totalCrimes = totalActual.toFixed(0);
+            const totalPredictions = totalPredicted.toFixed(0); // Format the prediction total
             
             return {
                 mae,
                 rmse,
                 totalErrors,
-                totalCrimes
+                totalCrimes,
+                totalPredictions // Add to returned object
             };
         }
 
-        // Function to create metrics panel
+        // Function to create metrics panel - UPDATED VERSION
         function createMetricsPanel(metrics) {
             // Create metrics panel container
             const metricsPanel = document.createElement('div');
@@ -414,9 +419,9 @@
                         <div class="metric-description">Mean Absolute Error</div>
                     </div>
                     <div class="metric-box">
-                        <div class="metric-value">${metrics.totalErrors}</div>
-                        <div class="metric-label">Total Error</div>
-                        <div class="metric-description">Sum of Absolute Errors</div>
+                        <div class="metric-value">${metrics.totalPredictions}</div>
+                        <div class="metric-label">Total Predicted</div>
+                        <div class="metric-description">Total Predicted Crimes</div>
                     </div>
                     <div class="metric-box">
                         <div class="metric-value">${metrics.totalCrimes}</div>
